@@ -10,6 +10,8 @@
 You can install this with:
 ```julia
 julia>]
+pkg> add https://github.com/boriskaus/MAGEMin_jll.jl
+pkg> add https://github.com/boriskaus/MAGEMin_C.jl
 pkg> add https://github.com/boriskaus/MAGEMin_app_dev
 ```
 
