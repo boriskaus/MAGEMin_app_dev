@@ -12,7 +12,7 @@ To install this, please install the local versions of `MAGEMin_jll` and `MAGEMin
 julia>]
 pkg> add https://github.com/boriskaus/MAGEMin_jll.jl
 pkg> add https://github.com/boriskaus/MAGEMin_C.jl
-pkg> add https://github.com/ComputationalThermodynamics/MAGEMin_app
+pkg> add https://github.com/boriskaus/MAGEMin_app_dev
 ```
 
 ### Running
