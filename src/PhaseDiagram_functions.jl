@@ -28,7 +28,20 @@ mutable struct isopleth_data
 end
 
 
-function get_phase_diagram_information(dtb,diagType,solver,bulk_L, bulk_R, oxi, fixT, fixP,bufferType, bufferN1, bufferN2)
+"""
+    function to format the markdown text area to display general informations of the computation
+"""
+function get_computation_info(npoints, meant)
+
+    infos  = "|Number of computed points &nbsp;| Minimization time (ms) |\n"
+    infos *= "|--------------------------------|------------------------|\n"
+    infos *= "|  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"*string(npoints)*"  |   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"*string(meant)*" |\n"
+
+    return infos
+end
+
+
+function get_phase_diagram_information(npoints, dtb,diagType,solver,bulk_L, bulk_R, oxi, fixT, fixP,bufferType, bufferN1, bufferN2)
 
     PD_infos  = Vector{String}(undef,2)
 
@@ -56,8 +69,10 @@ function get_phase_diagram_information(dtb,diagType,solver,bulk_L, bulk_R, oxi, 
     db_in     = retrieve_solution_phase_information(dtb)
 
 
-    PD_infos[1]  = "Phase Diagram computed using MAGEMin v1.3.6 <br>"
+    PD_infos[1]  = "Phase Diagram computed using MAGEMin v"*Out_XY[1].MAGEMin_ver*"<br>"
     PD_infos[1] *= "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾<br>"
+    PD_infos[1] *= "Number of points <br>"
+    
     PD_infos[1] *= "Date & time <br>"
     PD_infos[1] *= "Database <br>"
     PD_infos[1] *= "Diagram type <br>"
@@ -66,6 +81,7 @@ function get_phase_diagram_information(dtb,diagType,solver,bulk_L, bulk_R, oxi, 
     if bufferType != "none"
         PD_infos[1] *= "Buffer <br>"
     end            
+    
     if diagType == "pt"
         PD_infos[1] *= "X comp [mol] <br>"
         if bufferType != "none"
@@ -92,16 +108,19 @@ function get_phase_diagram_information(dtb,diagType,solver,bulk_L, bulk_R, oxi, 
         end        
         PD_infos[1] *= "Fixed Pres <br>"
     end
-    PD_infos[1] *= "_____________________________________________________________________________________________________<br>"
-    
+    oxi_string = replace.(oxi,"2"=>"₂", "3"=>"₃");
 
-    PD_infos[2] = " <br>"
-    PD_infos[2] *= " <br>"
+    PD_infos[1] *= "_____________________________________________________________________________________________________"
+    PD_infos[2] = "<br>"
+    PD_infos[2] *= "<br>"
+    PD_infos[2] *= string(npoints) * "<br>"
+    
     PD_infos[2] *= datetoday * ", " * rightnow * "<br>"
     PD_infos[2] *= db_in.db_info * "<br>"
+    
     PD_infos[2] *= dgtype *"<br>"
     PD_infos[2] *= solv *"<br>"
-    PD_infos[2] *= join(oxi, " ") *"<br>"
+    PD_infos[2] *= join(oxi_string, " ") *"<br>"
     if bufferType != "none"
         PD_infos[2] *= bufferType *"<br>"
     end            
@@ -131,8 +150,8 @@ function get_phase_diagram_information(dtb,diagType,solver,bulk_L, bulk_R, oxi, 
         end        
         PD_infos[2] *= join(fixP, " ") *"<br>"
     end
-    PD_infos[2] *= " <br>"
-    
+    PD_infos[2] *= "_"
+
     return PD_infos
 end
 
@@ -278,7 +297,7 @@ end
     Compute a new phase diagram from scratch
 """
 function compute_new_phaseDiagram(  xtitle,     ytitle,     lbl,
-                                    Xrange,     Yrange,     fieldname,
+                                    Xrange,     Yrange,     fieldname,  customTitle,
                                     dtb,        diagType,   verbose,    solver,
                                     fixT,       fixP,
                                     sub,        refLvl,
@@ -286,7 +305,7 @@ function compute_new_phaseDiagram(  xtitle,     ytitle,     lbl,
                                     bulk_L,     bulk_R,     oxi,
                                     bufferType, bufferN1,   bufferN2,
                                     smooth,     colorm,     reverseColorMap,
-                                    test,       PT_infos,   refType                                  )
+                                    test,       refType                                  )
 
         empty!(AppData.PseudosectionData);              #this empty the data from previous pseudosection computation
 
@@ -392,8 +411,9 @@ function compute_new_phaseDiagram(  xtitle,     ytitle,     lbl,
                                                                         data.x,
                                                                         data.y,
                                                                         Xrange,
-                                                                        Yrange,
-                                                                        PT_infos )
+                                                                        Yrange)
+
+        PT_infos                           = get_phase_diagram_information(npoints, dtb,diagType,solver,bulk_L, bulk_R, oxi, fixT, fixP,bufferType, bufferN1, bufferN2)
 
         data_plot, annotations = get_diagram_labels(    fieldname,
                                                         oxi,
@@ -410,7 +430,7 @@ function compute_new_phaseDiagram(  xtitle,     ytitle,     lbl,
         layout  = Layout(
                     images=frame,
                     title= attr(
-                        text    = db[(db.db .== dtb), :].title[test+1],
+                        text    = customTitle,
                         x       = 0.4,
                         xanchor = "center",
                         yanchor = "top"
@@ -450,8 +470,6 @@ function compute_new_phaseDiagram(  xtitle,     ytitle,     lbl,
                             reversescale    = reverseColorMap,
                             colorbar_title  = fieldname,
                             hoverinfo       = "skip",
-                            # hoverinfo       = "text",
-                            # text            = gridded_info,
                             showlegend      = false,
                             colorbar        = attr(     lenmode         = "fraction",
                                                         len             =  0.75,
@@ -474,9 +492,7 @@ function compute_new_phaseDiagram(  xtitle,     ytitle,     lbl,
 
         data_plot[1]    = heat_map
 
-        grid_out        = [""]
-
-        return vcat(data_plot,hover_lbl), layout, npoints, grid_out, meant
+        return vcat(data_plot,hover_lbl), layout, npoints, meant
 end
 
 
@@ -495,7 +511,7 @@ end
     Refine existing phase diagram
 """
 function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
-                                Xrange,     Yrange,     fieldname,
+                                Xrange,     Yrange,     fieldname,  customTitle,
                                 dtb,        diagType,   verbose,    solver,
                                 fixT,       fixP,
                                 sub,        refLvl,
@@ -503,7 +519,7 @@ function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
                                 bulk_L,     bulk_R,     oxi,
                                 bufferType, bufferN1,   bufferN2,
                                 smooth,     colorm,     reverseColorMap,
-                                test,       PT_infos,   refType                                 )
+                                test,       refType                                 )
 
     global MAGEMin_data, forest, data, Hash_XY, Out_XY, n_phase_XY, field, data_plot, gridded, gridded_info, X, Y, PhasesLabels, addedRefinementLvl, layout, n_lbl
 
@@ -525,7 +541,7 @@ function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
                                                                 Out_XY_old      = Out_XY,
                                                                 n_phase_XY_old  = n_phase_XY) # recompute points that have not been computed before
 
-    println("Computed $(length(ind_map.<0)) new points in $t seconds")
+    println("Computed $(length(ind_map.<0)) new points in $(round(t, digits=3)) seconds")
     data                = data_new
     forest              = forest_new
     addedRefinementLvl += 1;
@@ -535,7 +551,6 @@ function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
 
     #________________________________________________________________________________________#                   
     # Scatter plotly of the grid
-
     gridded, gridded_info, X, Y, npoints, meant = get_gridded_map(  fieldname,
                                                                     oxi,
                                                                     Out_XY,
@@ -548,9 +563,10 @@ function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
                                                                     data.x,
                                                                     data.y,
                                                                     Xrange,
-                                                                    Yrange,
-                                                                    PT_infos )
-
+                                                                    Yrange )
+    
+    PT_infos                           = get_phase_diagram_information(npoints,dtb,diagType,solver,bulk_L, bulk_R, oxi, fixT, fixP,bufferType, bufferN1, bufferN2)
+                                                              
     data_plot, annotations = get_diagram_labels(    fieldname,
                                                     oxi,
                                                     Out_XY,
@@ -561,8 +577,14 @@ function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
                                                     data.xc,
                                                     data.yc,
                                                     PT_infos )
-    layout[:annotations] = annotations                                                                                   
-
+    layout[:annotations] = annotations 
+    layout[:title] = attr(
+        text    = customTitle,
+        x       = 0.4,
+        xanchor = "center",
+        yanchor = "top"
+    )
+    
     data_plot[1] = heatmap( x               = X,
                             y               = Y,
                             z               = gridded,
@@ -573,8 +595,6 @@ function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
                             colorbar_title  = fieldname,
                             reversescale    = reverseColorMap,
                             hoverinfo       = "skip",
-                            # hoverinfo       = "text",
-                            # text            = gridded_info,
                             colorbar        = attr(     lenmode         = "fraction",
                                                         len             =  0.75,
                                                         thicknessmode   = "fraction",
@@ -591,10 +611,8 @@ function refine_phaseDiagram(   xtitle,     ytitle,     lbl,
                             hoverinfo       = "text",
                             showlegend      = false,
                             text            = gridded_info )
-    grid_out    = [""]
 
-
-    return vcat(data_plot,hover_lbl), layout, npoints, grid_out, meant
+    return vcat(data_plot,hover_lbl), layout, npoints, meant
 
 end
 
@@ -624,8 +642,6 @@ function update_colormap_phaseDiagram(      xtitle,     ytitle,
                             colorbar_title  =  fieldname,
                             reversescale    =  reverseColorMap,
                             hoverinfo       = "skip",
-                            # hoverinfo       = "text",
-                            # text            = gridded_info,
                             colorbar        = attr(     lenmode         = "fraction",
                                                         len             =  0.75,
                                                         thicknessmode   = "fraction",
@@ -633,10 +649,136 @@ function update_colormap_phaseDiagram(      xtitle,     ytitle,
                                                         x               =  1.005,
                                                         y               =  0.5         ),)
 
-    grid_out    = [""]
-
-    return data_plot,layout, grid_out
+    return data_plot,layout
 end
+
+
+"""
+    show_hide_reaction_lines(    xtitle,     ytitle,     grid,  
+                                    Xrange,     Yrange,     fieldname,
+                                    dtb,
+                                    smooth,     colorm,     reverseColorMap,
+                                    test                                  )
+    Shows/hides the grid
+"""
+function  show_hide_reaction_lines(  sub, 
+                                        refLvl, 
+                                        Xrange, 
+                                        Yrange  )
+
+    global data, Hash_XY, addedRefinementLvl
+
+    boundaries  = get_boundaries(   Hash_XY,
+                                    sub,
+                                    refLvl+addedRefinementLvl,
+                                    Xrange,
+                                    Yrange,
+                                    data.xc,
+                                    data.yc,
+                                    data.x,
+                                    data.y          ) 
+    
+    bnd            = findall(boundaries .> 0)
+
+    # np             = length(bnd)
+    # grid_plot      = Vector{GenericTrace{Dict{Symbol, Any}}}(undef, np);
+    # for i = 1:np
+
+    #     x = vcat(data.x[boundaries[bnd[i]]],data.x[boundaries[bnd[i]]][1])
+    #     y = vcat(data.y[boundaries[bnd[i]]],data.y[boundaries[bnd[i]]][1])
+    #     grid_plot[i] = scatter(     x           = x,
+    #                                 y           = y,
+    #                                 mode        = "lines",
+    #                                 # line_color  = "#FFFFFF",
+    #                                 line_color  = "#333333",
+    #                                 line_width  = 0.2,
+    #                                 showlegend  = false     )
+    # end
+
+    grid_plot = GenericTrace{Dict{Symbol, Any}}
+
+    grid_plot =  scatter(   x           = data.xc[boundaries[bnd]],
+                            y           = data.yc[boundaries[bnd]],
+                            mode        = "markers",
+                            # line_color  = "#FFFFFF",
+                            # color       = "#333333",
+                            marker      = attr(color = "#333333", size = 1.5),
+                            hoverinfo   = "skip",
+                            showlegend  = false     );
+
+    # print("$data \n")
+
+
+    # n_hull      = length(unique(Hash_XY))
+    # hull_list   = Vector{Any}(undef,    n_hull)
+    # id          = 0
+
+    # for i in unique(Hash_XY)
+    #     field_tmp   = findall(Hash_XY .== i)
+    
+    #     # t2          = reduce(vcat,data.x[field_tmp])
+    #     # p2          = reduce(vcat,data.y[field_tmp])
+    
+    #     t2          = data.xc[field_tmp]
+    #     p2          = data.yc[field_tmp]
+
+    #     np          = length(t2)
+    #     if np > 2
+    #         id             += 1
+    #         points          = [[ t2[i]+rand()/100, p2[i]+rand()/100] for i=1:np]
+    #         hull_list[id]   = concave_hull(points,1024)
+    #     end
+    # end
+    # n_trace     = id;
+    # grid_plot   = Vector{GenericTrace{Dict{Symbol, Any}}}(undef,n_trace);
+
+    # for i = 1:n_trace
+
+    #     tmp     = mapreduce(permutedims,vcat,hull_list[i].vertices)
+    #     tmp     = vcat(tmp,tmp[1,:]')
+    
+    #     grid_plot[i] = scatter(     x           =  tmp[:,1],
+    #                                 y           =  tmp[:,2],
+    #                                 mode        = "lines",
+    #                                 # line_color  = "#FFFFFF",
+    #                                 line_color  = "#333333",
+    #                                 line_width  = 0.2,
+    #                                 showlegend  = false     )
+    # end
+
+    return grid_plot
+end
+
+
+
+
+"""
+    show_hide_reaction_lines(    xtitle,     ytitle,     grid,  
+                                    Xrange,     Yrange,     fieldname,
+                                    dtb,
+                                    smooth,     colorm,     reverseColorMap,
+                                    test                                  )
+    Shows/hides the grid
+"""
+function  show_hide_mesh_grid()
+
+    np             = length(data.x)
+    grid_plot      = Vector{GenericTrace{Dict{Symbol, Any}}}(undef, np);
+    for i = 1:np
+
+        grid_plot[i] = scatter(     x           = data.x[i],
+                                    y           = data.y[i],
+                                    mode        = "lines",
+                                    # line_color  = "#FFFFFF",
+                                    line_color  = "#333333",
+                                    line_width  = 0.2,
+                                    hoverinfo   = "skip",
+                                    showlegend  = false     )
+    end
+
+    return grid_plot
+end
+
 
 
 
@@ -692,9 +834,7 @@ function  update_diplayed_field_phaseDiagram(   xtitle,     ytitle,
                                                         x               =  1.005,
                                                         y               =  0.5         ),)
 
-    grid_out    = [""]
-
-    return data_plot,layout, grid_out
+    return data_plot,layout
 end
 
 """
@@ -702,7 +842,7 @@ end
     Initiatize global variable storing isopleths information
 """
 function initialize_g_isopleth(; n_iso_max = 32)
-    global g_traces
+    global data_isopleth
 
     status    = zeros(Int64,n_iso_max)
     active    = []
@@ -715,12 +855,12 @@ function initialize_g_isopleth(; n_iso_max = 32)
     label     = Vector{String}(undef,n_iso_max)
     value     = Vector{Int64}(undef,n_iso_max)
 
-    g_traces = isopleth_data(0, n_iso_max,
+    data_isopleth = isopleth_data(0, n_iso_max,
                                 status, active, isoP,
                                 label, value)
 
-
-    return g_traces
+    
+    return data_isopleth
 end
 
 
@@ -751,7 +891,7 @@ function add_isopleth_phaseDiagram(         Xrange,     Yrange,
         name    = of
     end
 
-    global g_traces, nIsopleths, data, Out_XY, data_plot, X, Y, addedRefinementLvl
+    global data_isopleth, nIsopleths, data, Out_XY, data_plot, X, Y, addedRefinementLvl
 
     gridded, X, Y = get_isopleth_map(   mod, ss, em, of,
                                         oxi,
@@ -765,9 +905,9 @@ function add_isopleth_phaseDiagram(         Xrange,     Yrange,
                                         Xrange,
                                         Yrange )
 
-    g_traces.n_iso += 1
+    data_isopleth.n_iso += 1
 
-    g_traces.isoP[g_traces.n_iso]= contour(     x                   = X,
+    data_isopleth.isoP[data_isopleth.n_iso]= contour(     x                   = X,
                                                 y                   = Y,
                                                 z                   = gridded,
                                                 contours_coloring   = "lines",
@@ -785,50 +925,50 @@ function add_isopleth_phaseDiagram(         Xrange,     Yrange,
                                                                                                     color   = isoColorLine,  )
                                                 )
                                             )
-    g_traces.status[g_traces.n_iso]   = 1
-    g_traces.label[g_traces.n_iso]    = name
-    g_traces.value[g_traces.n_iso]    = g_traces.n_iso
-    g_traces.active                   = findall(g_traces.status .== 1)
-    n_act                             = length(g_traces.active)
+    data_isopleth.status[data_isopleth.n_iso]   = 1
+    data_isopleth.label[data_isopleth.n_iso]    = name
+    data_isopleth.value[data_isopleth.n_iso]    = data_isopleth.n_iso
+    data_isopleth.active                   = findall(data_isopleth.status .== 1)
+    n_act                             = length(data_isopleth.active)
 
-    isopleths = [Dict("label" => g_traces.label[g_traces.active[i]], "value" => g_traces.value[g_traces.active[i]])
+    isopleths = [Dict("label" => data_isopleth.label[data_isopleth.active[i]], "value" => data_isopleth.value[data_isopleth.active[i]])
                         for i=1:n_act]
 
-    return g_traces, isopleths
+    return data_isopleth, isopleths
 
 end
 
 function remove_single_isopleth_phaseDiagram(isoplethsID)
-    global g_traces
+    global data_isopleth
 
-    g_traces.n_iso                -= 1      
-    g_traces.status[isoplethsID]   = 0;
-    g_traces.isoP[isoplethsID]     = contour()
-    g_traces.label[isoplethsID]    = ""
-    g_traces.value[isoplethsID]    = 0
-    g_traces.active                = findall(g_traces.status .== 1)
-    n_act                          = length(g_traces.active)
-    isopleths = [Dict("label" => g_traces.label[g_traces.active[i]], "value" => g_traces.value[g_traces.active[i]])
+    data_isopleth.n_iso                -= 1      
+    data_isopleth.status[isoplethsID]   = 0;
+    data_isopleth.isoP[isoplethsID]     = contour()
+    data_isopleth.label[isoplethsID]    = ""
+    data_isopleth.value[isoplethsID]    = 0
+    data_isopleth.active                = findall(data_isopleth.status .== 1)
+    n_act                          = length(data_isopleth.active)
+    isopleths = [Dict("label" => data_isopleth.label[data_isopleth.active[i]], "value" => data_isopleth.value[data_isopleth.active[i]])
                     for i=1:n_act]
 
-    return g_traces, isopleths
+    return data_isopleth, isopleths
 end
 
 
 function remove_all_isopleth_phaseDiagram()
-    global g_traces, data_plot
+    global data_isopleth, data_plot
 
-    g_traces.label    .= ""
-    g_traces.value    .= 0
-    g_traces.n_iso     = 0
-    for i=1:g_traces.n_iso_max
-        g_traces.isoP[i] = contour()
+    data_isopleth.label    .= ""
+    data_isopleth.value    .= 0
+    data_isopleth.n_iso     = 0
+    for i=1:data_isopleth.n_iso_max
+        data_isopleth.isoP[i] = contour()
     end
-    g_traces.status   .= 0
-    g_traces.active   .= 0
+    data_isopleth.status   .= 0
+    data_isopleth.active   .= 0
 
     # clear isopleth dropdown menu
     isopleths = []              
 
-    return g_traces, isopleths, data_plot
+    return data_isopleth, isopleths, data_plot
 end

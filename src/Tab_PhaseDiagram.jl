@@ -29,45 +29,59 @@ function Tab_PhaseDiagram()
                             dbc_card(dbc_cardbody([
                                     # html_div("‎ "),
                                     dbc_row([
-                                        dbc_col([ 
-                                            html_h1("Number of computed points", style = Dict("textAlign" => "center","font-size" => "120%")),
-                                        ], width=6),
-                                        dbc_col([ 
-                                                dbc_input(
-                                                id      = "npoints-id",
-                                                type    = "number", 
-                                                value   = 0,
-                                                disabled = true   ),
-                                        ]),
+                                        dbc_card([
+                                            dcc_markdown(   id          = "computation-info-id", 
+                                                            children    = "",
+                                                            style       = Dict("white-space" => "pre"))
+                                        ])
                                     ]),
-                                    dbc_row([
-                                        dbc_col([ 
-                                            html_h1("Average minimization time [ms]", style = Dict("textAlign" => "center","font-size" => "120%")),
-                                        ], width=6),
-                                        dbc_col([ 
-                                                dbc_input(
-                                                id      = "meant-id",
-                                                type    = "number", 
-                                                value   = 0,
-                                                disabled = true   ),
-                                        ]),
-                                        dbc_tooltip("This is the average minimization time per point: n_points/time_per_point",target="meant-id"),
-                                    ]),
+
+                                    # dbc_row([
+                                    #     dbc_col([ 
+                                    #         html_h1("# computed points", style = Dict("textAlign" => "center","font-size" => "120%")),
+                                    #     ], width=6),
+                                    #     dbc_col([ 
+                                    #         dbc_card([
+                                    #             dcc_markdown(   id          = "npoints-id", 
+                                    #                             children    = "",
+                                    #                             style       = Dict("white-space" => "pre"))
+                                    #             ])
+                                    #     ]),
+                                    # ]),
+                                    # dbc_row([
+                                    #     dbc_col([ 
+                                    #         html_h1("Minimization time [ms]", style = Dict("textAlign" => "center","font-size" => "120%")),
+                                    #     ], width=6),
+                                    #     dbc_col([ 
+                                    #         dbc_card([
+                                    #             dcc_markdown(   id          = "meant-id", 
+                                    #                             children    = "",
+                                    #                             style       = Dict("white-space" => "pre"))
+                                    #             ])
+                                    #     ]),
+                                    #     dbc_tooltip("This is the average minimization time per point: n_points/time_per_point",target="meant-id"),
+                                    # ]),
+
                                     html_div("‎ "),
                                     dbc_row([
-                                        dcc_textarea(
-                                            id="click-data",
-                                            value       = "",
-                                            readOnly    = true,
-                                            disabled    = true,
-                                            draggable   = false,
-                                            style       = Dict( "textAlign" => "left",
-                                                                "font-size" => "110%",
-                                                                "width"     => "100%",
-                                                                "height"    => "160px",
-                                                                "resize"    => "none")
-                                        ),
-                                    ]),
+                                        
+                                            dbc_col([ 
+                                                dbc_card([
+                                                dcc_markdown(   id          = "click-data-left", 
+                                                                children    = "",
+                                                                style       = Dict("white-space" => "pre"))
+                                                ])
+                                            ]),
+                                            dbc_col([ 
+                                                dbc_card([
+                                                dcc_markdown(   id          = "click-data-right", 
+                                                                children    = "",
+                                                                style       = Dict("white-space" => "pre"))
+                                                ])
+                                            ]),
+
+                                        ]),
+
                                     html_div("‎ "),
 
                                     dbc_row([
@@ -360,21 +374,43 @@ function Tab_PhaseDiagram()
 
                                 dbc_row([
                                     dbc_col([ 
-                                        html_h1("Show/hide stable phases", style = Dict("textAlign" => "center","font-size" => "120%", "marginTop" => 0)),
+                                        html_h1("Show reaction lines", style = Dict("textAlign" => "center","font-size" => "120%", "marginTop" => 8)),
                                     ], width=5),
-                                    dbc_col([ 
-                                        dcc_checklist(
-                                            id      ="show-lbl-id",
-                                            options = [
-                                                Dict("label" => "", "value" => "LBL"),
-                                            ],
-                                            value   = ["LBL"],
-                                            inline  = true,
-                                        ),
-                                        dbc_tooltip("Hide/display the stable phase assemblages"),
-
-                                    ]),
+                                    dbc_col([
+                                        dcc_dropdown(   id          = "show-grid",
+                                                        options     =  ["true","false"],
+                                                        value       = "false" ,
+                                                        clearable   =  false,
+                                                        multi       =  false),
+                                    ]), 
                                 ]),
+
+                                dbc_row([
+                                    dbc_col([ 
+                                        html_h1("Show grid", style = Dict("textAlign" => "center","font-size" => "120%", "marginTop" => 8)),
+                                    ], width=5),
+                                    dbc_col([
+                                        dcc_dropdown(   id          = "show-full-grid",
+                                                        options     =  ["true","false"],
+                                                        value       = "false" ,
+                                                        clearable   =  false,
+                                                        multi       =  false),
+                                    ]), 
+                                ]),
+
+                                dbc_row([
+                                    dbc_col([ 
+                                        html_h1("Show stable phases", style = Dict("textAlign" => "center","font-size" => "120%", "marginTop" => 8)),
+                                    ], width=5),
+                                    dbc_col([
+                                        dcc_dropdown(   id          = "show-lbl-id",
+                                                        options     =  ["true","false"],
+                                                        value       = "true" ,
+                                                        clearable   =  false,
+                                                        multi       =  false),
+                                    ]), 
+                                ]),
+
 
                                 dbc_row([
                                     dbc_col([ 

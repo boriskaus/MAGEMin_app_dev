@@ -126,7 +126,7 @@ function Tab_Simulation()
                                     #pressure
                                     dbc_row([
                                         dbc_col([ 
-                                            html_h1("Pressure", style = Dict("textAlign" => "center","font-size" => "120%")),
+                                            html_h1("Pressure [kbar]", style = Dict("textAlign" => "center","font-size" => "120%")),
                                         ], width=6),
                                         dbc_col([ 
                                             dbc_row([
@@ -155,7 +155,7 @@ function Tab_Simulation()
                                     #temperature                                                        
                                     dbc_row([
                                         dbc_col([ 
-                                            html_h1("Temperature", style = Dict("textAlign" => "center","font-size" => "120%")),
+                                            html_h1("Temperature [°C]", style = Dict("textAlign" => "center","font-size" => "120%")),
                                         ], width=6),
                                         dbc_col([ 
                                             dbc_row([
@@ -532,11 +532,27 @@ function Tab_Simulation()
                                                 ], width=3),
                                                 dbc_col([ 
                                                     dbc_input(
-                                                        id      = "title-id",
-                                                        type    = "text",  
-                                                        value   = db[(db.db .== "ig"), :].title[1]   ),            
+                                                        id              = "title-id",
+                                                        type            = "text",  
+                                                        value           = db[(db.db .== "ig"), :].title[1] ),            
                                                 ]),
                                             ]),
+                                            # update/reset title
+                                            dbc_row([
+                                                dbc_col([ 
+                                                ], width=4),        
+                                                dbc_col([ 
+                                                    dbc_button(
+                                                        "Update", id="update-title-button", color="light",  n_clicks=0,
+                                                    ),
+                                                ]),
+                                                dbc_col([ 
+                                                    dbc_button(
+                                                        "Reset", id="reset-title-button", color="light",  n_clicks=0,
+                                                    ),
+                                                ]),
+                                            ]),
+
                                             #Filename
                                             html_div("‎ "),
                                             dbc_row([
